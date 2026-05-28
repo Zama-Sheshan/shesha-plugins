@@ -1676,6 +1676,41 @@
           "desc": "Module the reference list belongs to. Null for the current module."
         }
       ]
+    },
+    "form-id": {
+      "desc": "Identifies a Shesha form (FormIdentifier). Shape: { name, module }.",
+      "shape": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "desc": "Form name slug (e.g. \"account-create-view\")."
+        },
+        {
+          "name": "module",
+          "type": "string",
+          "required": true,
+          "desc": "Module the form belongs to (e.g. \"Boxfusion.SheshaFunctionalTests.Common\")."
+        }
+      ]
+    },
+    "calendar-layer": {
+      "desc": "A calendar data layer defining an event source. dataSource discriminates 'entity' vs 'custom' (url) variants.",
+      "shape": [
+        { "name": "id", "type": "string", "required": true, "desc": "Unique layer ID (GUID)." },
+        { "name": "name", "type": "string", "required": true, "desc": "Internal identifier for the layer." },
+        { "name": "label", "type": "string", "required": false, "desc": "Display label shown in the layer switcher." },
+        { "name": "sortOrder", "type": "number", "required": false },
+        { "name": "orderIndex", "type": "number", "required": false },
+        { "name": "allowChangeVisibility", "type": "boolean", "required": false, "desc": "Allow the user to toggle this layer's visibility." },
+        { "name": "visible", "type": "boolean", "required": false, "desc": "Whether the layer is visible by default." },
+        { "name": "dataSource", "type": "string", "required": true, "options": ["entity", "custom"], "desc": "'entity' fetches via entityType; 'custom' fetches via customUrl." },
+        { "name": "entityType", "type": "form-id", "required": false, "desc": "Entity type identifier ({ name, module }) used when dataSource is 'entity'." },
+        { "name": "title", "type": "string", "required": false, "desc": "Property name on the entity to use as the event title." },
+        { "name": "startTime", "type": "string", "required": false, "desc": "Property name on the entity that holds the event start date/time." },
+        { "name": "endTime", "type": "string", "required": false, "desc": "Property name on the entity that holds the event end date/time." },
+        { "name": "customUrl", "type": "string", "required": false, "desc": "API URL to fetch events from (used when dataSource is 'custom')." }
+      ]
     }
   }
 }
