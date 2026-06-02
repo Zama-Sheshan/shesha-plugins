@@ -1,6 +1,6 @@
 # dropdown / radio / checkboxGroup / refListStatus
 
-All require `editMode: "editable"` (except `refListStatus`, which is display-only).
+All interactive variants use `editMode: "inherited"` (except `refListStatus`, which is display-only).
 
 ---
 
@@ -9,6 +9,13 @@ All require `editMode: "editable"` (except `refListStatus`, which is display-onl
 Two data sources: `'values'` (hardcoded) or `'referenceList'` (Shesha reference list).
 
 ### Reference list source
+
+**Always read `referenceListId.module` and `referenceListId.name` from the property metadata — never guess.** The property object returned by `Metadata/GetProperties` has two fields you need:
+
+- `property.referenceListModule` → `referenceListId.module`
+- `property.referenceListName` → `referenceListId.name` (this is the fully-qualified list name, e.g. `"PBF.MembershipManagement.AccountType"`)
+
+A wrong module/name pair produces a **silent empty dropdown** with no runtime error — there is no way to detect this without opening the form in a browser. Never infer or guess these values.
 
 ```json
 {
@@ -19,14 +26,16 @@ Two data sources: `'values'` (hardcoded) or `'referenceList'` (Shesha reference 
   "dataSourceType": "referenceList",
   "referenceListId": {
     "module": "PBF.MembershipManagement",
-    "name": "AccountType"
+    "name": "PBF.MembershipManagement.AccountType"
   },
+  "referenceListName": "PBF.MembershipManagement.AccountType",
+  "valueFormat": "simple",
   "mode": "single",
-  "editMode": "editable"
+  "editMode": "inherited"
 }
 ```
 
-**`referenceListId` is NOT a Guid** — it's `{ module, name }`. The framework resolves at runtime. A wrong module/name pair = silent empty dropdown.
+**`referenceListId` is NOT a Guid** — it's `{ module, name }`. The framework resolves at runtime.
 
 ### Hardcoded values source
 
@@ -42,7 +51,7 @@ Every item must have all three keys (`id`, `label`, `value`):
     { "id": "1", "label": "Email", "value": "email" },
     { "id": "2", "label": "SMS", "value": "sms" }
   ],
-  "editMode": "editable"
+  "editMode": "inherited"
 }
 ```
 
