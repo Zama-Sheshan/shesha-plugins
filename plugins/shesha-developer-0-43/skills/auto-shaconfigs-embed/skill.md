@@ -16,7 +16,7 @@ Find the `.csproj` file for the Application project (not Domain). It is typicall
 Search the `.csproj` for any existing `.shaconfig` entries:
 
 ```xml
-<EmbeddedResource Include="ConfigMigrations\
+<EmbeddedResource Include="ConfigMigrations\*.shaconfig"
 ```
 
 - If individual `<EmbeddedResource>` entries exist for `.shaconfig` files, remove them — the wildcard pattern added in Step 3 will replace them.
