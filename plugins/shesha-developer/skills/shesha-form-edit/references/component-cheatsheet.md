@@ -14,7 +14,7 @@ bottom) and trust that.
 | type | version | type | version |
 |---|---|---|---|
 | `container` | 7 | `datatable` | 29 |
-| `columns` | 5 | `datatableContext` | 7 |
+| `columns` | 5 | `dataContext` | 8 |
 | `text` | 5 | `datalist` | 11 |
 | `textField` | 6 | `datatable.pager` | 4 |
 | `textArea` | 5 | `datatable.quickSearch` | 3 |
@@ -46,8 +46,8 @@ bottom) and trust that.
   "dataSourceType": "values", "mode": "multiple", "referenceListId": null, "container": {}, "validate": {},
   "items": [ { "label": "A", "value": "a" } ] }
 
-// datatableContext (wrapper for datatable/datalist — needs explicit entityType + sourceType)
-{ "id": "<uuid>", "type": "datatableContext", "version": 7, "parentId": "<pid>",
+// dataContext (wrapper for datatable/datalist — needs explicit entityType + sourceType)
+{ "id": "<uuid>", "type": "dataContext", "version": 8, "parentId": "<pid>",
   "entityType": "<exact modelType>", "sourceType": "Entity", "dataFetchingMode": "paging",
   "defaultPageSize": 10, "uniqueStateId": "<name>", "componentName": "<name>", "propertyName": "<name>" }
 

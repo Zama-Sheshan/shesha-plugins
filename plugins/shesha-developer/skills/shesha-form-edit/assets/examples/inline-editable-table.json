@@ -14,11 +14,11 @@
       "components": [
         {
           "id": "6ba72a4b-7005-47b0-b31a-6dcfc4d067d8",
-          "type": "datatableContext",
+          "type": "dataContext",
           "propertyName": "inventoryCtx",
           "componentName": "inventoryCtx",
           "parentId": "5422e967-7b2f-4011-a604-8f958210adcc",
-          "version": 7,
+          "version": 8,
           "entityType": "boxfusion.test.Domain.InventoryItems.InventoryItem",
           "sourceType": "Entity",
           "dataFetchingMode": "paging",

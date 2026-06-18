@@ -78,13 +78,15 @@ Skip if `formSettings.dataLoaderType === "none"`. Otherwise fetch the entity's m
 
 **Get the exact `modelType` string first (critical — wrong type causes 500 errors at runtime):**
 
-The `formSettings.modelType` must be the **exact registered C# class name for THIS backend** — resolve it dynamically every time; never assume or copy a namespace from this doc. The same logical entity is registered under different namespaces across Shesha/BoxStack versions: framework entities like `Person` are `Shesha.Domain.Person` on current versions but `Shesha.Core.Person` on older ones, and a backend may even carry both. **The only authority is the live `EntityConfig` for the running backend.** Getting this wrong causes 500/404 errors in the browser when the loader or `datatableContext` queries the entity — any mismatch with the registered `fullClassName` is a runtime failure.
+The `formSettings.modelType` must be the **exact registered C# class name for THIS backend** — resolve it dynamically every time; never assume or copy a namespace from this doc. The same logical entity is registered under different namespaces across Shesha/BoxStack versions: framework entities like `Person` are `Shesha.Domain.Person` on current versions but `Shesha.Core.Person` on older ones, and a backend may even carry both. **The only authority is the live `EntityConfig` for the running backend.** Getting this wrong causes 500/404 errors in the browser when the loader or `dataContext` queries the entity — any mismatch with the registered `fullClassName` is a runtime failure.
 
 Resolve it (in priority order) — and use the result verbatim:
 1. **From entity config (authoritative)**: `GET $BASE_URL/api/services/app/EntityConfig/GetMainDataList?maxResultCount=200` — find the entity by `name`, then use its **`fullClassName`** (fall back to `className`) as `modelType`. This is the authoritative string — use it verbatim.
 2. **Cross-check against an existing form**: `GET $BASE_URL/api/services/Shesha/FormConfiguration/GetAll?maxResultCount=50` — a form bound to the same entity shows the in-use `modelType`. If existing forms disagree with each other (legacy `Shesha.Core.*` vs current `Shesha.Domain.*`), the EntityConfig `fullClassName` wins.
 
 **Entity existence check**: before building any form, verify the entity exists: `GET $BASE_URL/api/services/app/Metadata/GetProperties?container=<exactModelType>`. If the response returns an empty array or error, the entity does not exist — stop and invoke `Skill(skill="shesha-developer:domain-model")`. Never build forms for entities that don't exist; they silently fail at runtime.
+
+**If you (or `domain-model`) create or change an entity/property/reflist, the backend MUST be rebuilt and restarted before the entity is usable — follow [references/backend-restart.md](references/backend-restart.md).** Do this BEFORE building the form, and in this order: domain change → rebuild + restart (+ the 2-boot lag for new entities) → poll the entity's `…/api/dynamic/<module>/<Entity>/Crud/GetAll` until 200 → only then author/push the form. Never relaunch IIS Express outside Visual Studio (it 500s); headless runs take over :21021 with `dotnet`, attended runs hand the restart back to VS. This restart sequence is the biggest cost/failure sink when improvised — use the runbook.
 
 1. Read `formSettings.modelType` (the exact class name resolved above).
 2. Fetch `GET $BASE_URL/api/services/app/Metadata/GetProperties?container=<modelType>` — returns `result` as a direct array of properties (not wrapped). Cache to `.claude/cache/shesha-form-edit/metadata/<entity>.raw.json`.
@@ -108,7 +110,7 @@ Read **only** the topic files relevant to the edit. Most edits need 1–3 files:
 | Autocomplete, entityPicker | [references/components/selectors.md](references/components/selectors.md) |
 | Containers, card, columns, tabs | [references/components/containers.md](references/components/containers.md) |
 | Buttons, links, subForm, action wiring | [references/components/actions.md](references/components/actions.md) |
-| Datatable, datalist, datatableContext / dataContext | [references/components/data-tables.md](references/components/data-tables.md) |
+| Datatable, datalist, dataContext (data wrapper) | [references/components/data-tables.md](references/components/data-tables.md) |
 | Component selection by property data type | [references/components/by-datatype.md](references/components/by-datatype.md) |
 | Child tables on a detail view (tabs + permanentFilter) | [references/components/child-tables.md](references/components/child-tables.md) |
 | Canonical example seeds (copy these first) | [references/examples.md](references/examples.md) |
@@ -128,6 +130,7 @@ Read **only** the topic files relevant to the edit. Most edits need 1–3 files:
 | Multi-agent fleet dispatch, verdict schemas, cost table | [references/orchestration.md](references/orchestration.md) |
 | Browser testing, IndexedDB cache, layout measurement | [references/verification.md](references/verification.md) |
 | Symptoms whose fix is backend (reflists, junction DTOs, GQL) | [references/full-stack-prereqs.md](references/full-stack-prereqs.md) |
+| Rebuild + restart the backend after a domain change (entity/migration) | [references/backend-restart.md](references/backend-restart.md) |
 
 **Touching more than ~3 forms?** Read [references/bulk-operations.md](references/bulk-operations.md) first — pilot-first is mandatory. Mutations go through **one `shesha-developer:fleet-transformer` agent** (never per-form authoring agents); audits fan out **one `shesha-developer:form-auditor` per form**. Dispatch templates + cost table: [references/orchestration.md](references/orchestration.md).
 
@@ -150,9 +153,9 @@ Read **only** the topic files relevant to the edit. Most edits need 1–3 files:
 
 For every new or edited form, before writing a single component object:
 
-1. **List every component `type` you plan to use.** (e.g. for a table form: `container`, `text`, `button`, `datatableContext`, `datatable`)
+1. **List every component `type` you plan to use.** (e.g. for a table form: `container`, `text`, `button`, `dataContext`, `datatable`)
 
-2. **Confirm each type exists** in the component index at `assets/groups/index.json` (bundled in this skill's assets folder). If a type is missing, you have the wrong name. The index is the authoritative source for the exact `type` string used in form JSON (e.g. `datatableContext` not `dataTableContext`; `datatable` not `dataTable`).
+2. **Confirm each type exists** in the component index at `assets/groups/index.json` (bundled in this skill's assets folder). If a type is missing, you have the wrong name. The index is the authoritative source for the exact `type` string used in form JSON (e.g. `dataContext` for the table/list data wrapper; `datatable` not `dataTable`).
 
 3. **Load the group file** for each component type (the index maps type → group file). Read the group file to get the full list of valid property names, their expected types, and descriptions. Only use properties listed there — anything else will be stripped by `clean-form-config` at Step 6.
 
@@ -215,7 +218,7 @@ Then **invoke `clean-form-config` ONCE, right before the final push** (mandatory
 Skill(skill="shesha-developer:clean-form-config", args="<path to your edited form>")
 ```
 
-**Run it once on the finished markup — not after every intermediate edit** (re-running it per change is a large, repeated cost for no extra signal). **Known false positives — don't re-investigate or strip these:** the `datatableContext` data props (`entityType`, `sourceType`, `dataFetchingMode`, `defaultPageSize`, …), container `direction`/`flexDirection`, `text.padding`, and the datatable inline props (`canEditInline`/`canAddInline`/`canDeleteInline`/`inlineEditMode`/`inlineSaveMode`) are valid and render in live forms; the bundled index just doesn't enumerate them.
+**Run it once on the finished markup — not after every intermediate edit** (re-running it per change is a large, repeated cost for no extra signal). **Known false positives — don't re-investigate or strip these:** the `dataContext` data props (`entityType`, `sourceType`, `dataFetchingMode`, `defaultPageSize`, …), container `direction`/`flexDirection`, `text.padding`, and the datatable inline props (`canEditInline`/`canAddInline`/`canDeleteInline`/`inlineEditMode`/`inlineSaveMode`) are valid and render in live forms; the bundled index just doesn't enumerate them.
 
 If validation surfaces a REAL issue, fix it before pushing. **Never push a config that fails validation without user confirmation.**
 
@@ -247,9 +250,9 @@ After verifying, watch for these patterns in the browser console or from Playwri
 
 | Error | Cause | Fix |
 |---|---|---|
-| `HTTP 400` on datatableContext data load | Entity doesn't have GQL query API enabled in backend | Invoke `shesha-developer:domain-model` to enable GQL on entity, or use `sourceType: "Url"` with an explicit REST endpoint |
+| `HTTP 400` on dataContext data load | Entity doesn't have GQL query API enabled in backend | Invoke `shesha-developer:domain-model` to enable GQL on entity, or use `sourceType: "Url"` with an explicit REST endpoint |
 | `HTTP 404` on metadata fetch (`"Failed to fetch metadata of type …"`) | Wrong entity class name in `formSettings.modelType` | Re-verify entity type via `EntityConfig/GetMainDataList` or `FormConfiguration/GetAll` on existing forms |
-| `HTTP 500` on datatableContext | `entityType` or `sourceType` missing on `datatableContext` component | Add `entityType`, `sourceType: "Entity"`, `dataFetchingMode`, `defaultPageSize`, `uniqueStateId` |
+| `HTTP 500` on dataContext | `entityType` or `sourceType` missing on the `dataContext` component | Add `entityType`, `sourceType: "Entity"`, `dataFetchingMode`, `defaultPageSize`, `uniqueStateId` |
 | `JSON parse error` in browser console | Malformed script string in form markup — template literals or literal newlines | Run Step 5.5 JSON safety check; replace template literals with concatenation |
 | Form shows blank/empty without error | Short IDs (`pr1`, `btn2`) or all-`root` parentIds | Re-run `stampTree`; ensure `crypto.randomUUID()` IDs |
 | Detail form shows blank when navigated to without `?id=` | Normal — `gql` loader has no ID to fetch | This is expected; test detail forms with `?id=<real-guid>` |
@@ -302,11 +305,12 @@ Project-scoped learning state. **Skill reads `.summary.md` by default; opens raw
 
 ## Non-negotiables
 
-- **`datatableContext` (lowercase t) is the correct type** — `dataTableContext` (capital T) is NOT a valid type and silently renders nothing. The clean-form-config index uses `datatableContext`; use that exact string.
-- **`datatableContext` requires explicit `entityType` + `sourceType`** — it does NOT inherit from `formSettings.modelType`. A bare `datatableContext` without these props causes HTTP 500 on page load. Mandatory props: `entityType` (same value as `formSettings.modelType`), `sourceType: "Entity"`, `dataFetchingMode: "paging"`, `defaultPageSize: 10`, `uniqueStateId: "<componentName>"`, `componentName: "<name>"`, `propertyName: "<name>"`. Template:
+- **`dataContext` (v8) is the data wrapper for `datatable`/`datalist`.** It's the universal wrapper — verified to render display tables, multiselect tables, datalists, AND inline-editable tables, and it reliably fires the entity data query. Wrap every `datatable`/`datalist` in a `dataContext` carrying `sourceType: "Entity"` + `entityType` (string) + the fetching props (see the template below). The canonical seeds `employee-table.json` / `rs-table.json` use it.
+- **`dataContext` requires explicit `entityType` + `sourceType`** — it does NOT inherit from `formSettings.modelType`. A bare `dataContext` without these props causes HTTP 500 on page load. Mandatory props: `entityType` (string, same value as `formSettings.modelType`), `sourceType: "Entity"`, `dataFetchingMode: "paging"`, `defaultPageSize: 10`, `uniqueStateId: "<componentName>"`, `componentName: "<name>"`, `propertyName: "<name>"`. Template:
   ```json
   {
-    "type": "datatableContext",
+    "type": "dataContext",
+    "version": 8,
     "entityType": "<resolved modelType — exact EntityConfig fullClassName, same value as formSettings.modelType>",
     "sourceType": "Entity",
     "dataFetchingMode": "paging",
@@ -340,6 +344,7 @@ Project-scoped learning state. **Skill reads `.summary.md` by default; opens raw
 - **No `globalState`** for cross-form state. Default to `contexts.appContext` (app-wide) or `pageContext` (inter-page). `localStorage` / `sessionStorage` are OK only when state must survive a hard refresh AND the data is not sensitive (no auth tokens / PII) — see [shared-state.md](references/components/shared-state.md).
 - **API calls in scripts**: `try/catch` + `async/await` (no `.then()` chains) — see [scripts.md](references/components/scripts.md).
 - **Mustache expressions always use `{{double braces}}`** — e.g. `{{data.id}}`, `{{selectedRow.id}}`. Never write `{data.id}` (single brace). Single-brace expressions are silently ignored at runtime, producing empty values with no error.
+- **A domain change requires a backend rebuild + restart before the entity is usable** — follow [references/backend-restart.md](references/backend-restart.md). Order: domain change → restart → poll the entity's `…/Crud/GetAll` until 200 → then build the form. **Never relaunch IIS Express outside Visual Studio** (`hostingModel=InProcess` + `%LAUNCHER_PATH%` → 500.0 ANCM); headless = take over :21021 with `dotnet` (Kestrel), attended = hand the restart to VS. A **new** entity needs **two boots** (its dynamic CRUD controller registers a boot late). After any restart, re-verify your forms resolve by name (`GetByName`) and re-push if a live revision was orphaned.
 - **`access: 5`** on anonymous forms (login, register, OTP). Verify post-push via re-fetch.
 - **PowerShell + non-ASCII body**: pass UTF-8 bytes (em dashes / curly quotes trigger server 500 — `Unable to translate bytes [E2] ... from specified code page to Unicode`). Use `[System.Text.Encoding]::UTF8.GetBytes($jsonBody)` or `curl --data-binary @file`. And write staged JSON files **without a BOM** (`New-Object System.Text.UTF8Encoding $false`) — `Out-File -Encoding utf8` emits a BOM that breaks Node's `JSON.parse`. Recipe in [api.md](references/api.md).
 - **Human-readable labels on every field** — labels are user-facing AND how browser-based tests locate fields; a raw `propertyName` as a label fails both. Full contract: [form-quality.md](references/form-quality.md).
@@ -353,6 +358,7 @@ Project-scoped learning state. **Skill reads `.summary.md` by default; opens raw
 | Trigger | Invoke | Strength |
 |---|---|---|
 | Entity/property/reflist missing or broken (Step 4.5 gate) | `shesha-developer:domain-model` | MUST before any form push |
+| After a domain change (entity/property/reflist/migration created) | [backend-restart.md](references/backend-restart.md) runbook (rebuild + restart + 2-boot + poll CRUD) | MUST before building the form |
 | New entity-bound form / unverified entity this session | `shesha-developer:fullstack-prereq-checker` agent | MUST (block until `ready`) |
 | Form needs a custom (non-dynamic) endpoint for a Url-source or submit | `shesha-developer:shesha-app-layer` | MUST before wiring the endpoint |
 | Every push (Step 6) | `shesha-developer:clean-form-config` | MUST (respect its documented false positives) |

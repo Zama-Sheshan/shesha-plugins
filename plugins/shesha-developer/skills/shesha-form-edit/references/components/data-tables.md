@@ -1,4 +1,4 @@
-# datatableContext, datatable, datalist
+# dataContext, datatable, datalist
 
 > Versions + minimal shapes: [../component-cheatsheet.md](../component-cheatsheet.md). Read that before opening a large table seed.
 
@@ -6,7 +6,7 @@
 
 ## Lean by default — add only what the prompt asks for
 
-A table's DEFAULT footprint is: `datatableContext` → (`datatable.quickSearch` + `datatable.pager`) → `datatable`. **Do NOT add `tableViewSelector`, `datatable.filter`, a column-toggle button, a Refresh button, or an Export button unless the prompt explicitly asks for filtering / column control / refresh / export.** The configuration-studio's table generator emits all of that chrome — when you seed from it, strip what wasn't requested. Unrequested toolbar chrome is a quality defect.
+A table's DEFAULT footprint is: `dataContext` → (`datatable.quickSearch` + `datatable.pager`) → `datatable`. **Do NOT add `tableViewSelector`, `datatable.filter`, a column-toggle button, a Refresh button, or an Export button unless the prompt explicitly asks for filtering / column control / refresh / export.** The configuration-studio's table generator emits all of that chrome — when you seed from it, strip what wasn't requested. Unrequested toolbar chrome is a quality defect.
 
 **Toolbar buttons go in a `buttonGroup`, never as standalone `type:"button"` nodes** (a bare button in a toolbar is a defect, and the standalone Refresh/Columns buttons the generator emits must be removed or grouped). If the table has any action button, exactly one is `buttonType:"primary"`.
 
@@ -18,13 +18,13 @@ A table's DEFAULT footprint is: `datatableContext` → (`datatable.quickSearch` 
 
 ## Wrapper rule (non-negotiable)
 
-**`datatable` and `datalist` MUST be wrapped in a `datatableContext` (or `dataContext`).** Never put them at root with `entityType` / `sourceType` set on the component itself — that pattern technically renders something in some Shesha versions but is wrong and brittle:
+**`datatable` and `datalist` MUST be wrapped in a `dataContext`.** Never put them at root with `entityType` / `sourceType` set on the component itself — that pattern technically renders something in some Shesha versions but is wrong and brittle:
 
 - The data-fetching, paging, sorting, and filtering all live on the **context wrapper**, not the table/list. Putting them on the inner component means they don't get re-evaluated when filters or sort change, and external components (toolbar buttons, refresh actions) can't target them by `actionOwner: "<contextId>"`.
-- Built-in actions (`Refresh table`, `Export to Excel`, quick-search wiring) all expect to find a `datatableContext` ancestor. Without it, they silently no-op.
+- Built-in actions (`Refresh table`, `Export to Excel`, quick-search wiring) all expect to find a `dataContext` ancestor. Without it, they silently no-op.
 - Sub-form-renderer datalists (`formSelectionMode: "name"` with a row-template form) inherit the row data from the context's current row. Without the context, the row template gets nothing.
 
-Common symptoms of a missing wrapper: "datalist isn't refreshing after I change the filter", "the export button does nothing", "the row template isn't seeing the row data". Walk up the `parentId` chain from the datalist; if there isn't a `datatableContext` ancestor, that's the bug.
+Common symptoms of a missing wrapper: "datalist isn't refreshing after I change the filter", "the export button does nothing", "the row template isn't seeing the row data". Walk up the `parentId` chain from the datalist; if there isn't a `dataContext` ancestor, that's the bug.
 
 **Only exception**: a datalist with hardcoded `items` (not entity-bound) — e.g. inline help-style display. Even then, prefer the wrapper unless you have a specific reason.
 
@@ -35,7 +35,7 @@ Common symptoms of a missing wrapper: "datalist isn't refreshing after I change 
 ```json
 {
   "id": "...",
-  "type": "datatableContext",
+  "type": "dataContext",
   "propertyName": "tiersContext",
   "componentName": "tiersContext",
   "sourceType": "Entity",
@@ -69,7 +69,7 @@ The `datalist` here has **no** `entityType`, **no** `sourceType`, **no** `perman
 
 ```json
 {
-  "type": "datatableContext",
+  "type": "dataContext",
   "sourceType": "Url",
   "endpoint": "/api/services/app/EntityHistory/GetAuditTrail?entityId={{data.id}}&entityTypeFullName={{data.modelType}}",
   // Note: mustache expressions always use {{double braces}} — single {brace} is silently ignored

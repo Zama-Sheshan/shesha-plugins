@@ -210,7 +210,7 @@ Note: `fontSize` as a direct prop uses Tailwind class strings (`"text-xs"`, `"te
 ## Recipe: make a child fill its parent's full width
 
 A single child of a container sizes to its **content** (~700px), not the parent (e.g. a
-`datatableContext` inside a `sha-index-table-full` container looks narrow even though the container
+`dataContext` inside a `sha-index-table-full` container looks narrow even though the container
 is full width). The v7 renderer **ignores the legacy `direction: "vertical"`** prop. Fix by making
 the container a column flexbox that stretches its children:
 

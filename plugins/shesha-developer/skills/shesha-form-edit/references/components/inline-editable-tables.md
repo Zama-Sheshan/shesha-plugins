@@ -12,7 +12,7 @@ editing on yourself.
 
 ## 1. Datatable flags
 
-On the `datatable` component (inside its `datatableContext` wrapper — see [data-tables.md](data-tables.md)):
+On the `datatable` component (inside its `dataContext` wrapper — see [data-tables.md](data-tables.md)):
 
 ```jsonc
 "canEditInline": "yes",
@@ -119,5 +119,5 @@ correctly, and the dropdown's options load and save fine). This is not a config 
 ## 5. Save / data binding
 
 The grid's create/update/delete go through the entity's dynamic CRUD endpoints (the
-`datatableContext` `entityType` must be the exact registered class). Reference-list and FK columns
+`dataContext` `entityType` must be the exact registered class). Reference-list and FK columns
 require the reflist to have items / the FK target to have records, or the dropdowns/pickers are empty.
