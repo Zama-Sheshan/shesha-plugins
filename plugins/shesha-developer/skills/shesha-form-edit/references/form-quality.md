@@ -21,15 +21,19 @@ multiple" in a *list* is `selectionMode: "multiple"` on the `datalist`, not a sw
 When the prompt names neither noun and the layout is ambiguous, the right component was chosen by
 **asking** the user, not guessing. See [components/data-tables.md](components/data-tables.md).
 
-**Bind to a real entity — with the backend's exact class name.** `formSettings.modelType`
-must be the registered entity's **`fullClassName` as returned by
-`GET /api/services/app/EntityConfig/GetMainDataList`** for the running backend — resolve it
-every time, never assume or copy a namespace from memory or examples. The same entity is
+**Bind to a real entity — favouring the object shape.** Write `formSettings.modelType` as the
+object **`{ "name": "<ShortClass>", "module": "<Module>" }`** (e.g. `{ "name": "Person",
+"module": "Shesha" }`), the shape current Shesha builds emit; a bare full-class-name string
+still renders on legacy forms but is not what to author. Resolve `name`+`module` — and the
+`fullClassName` string you still need for the metadata fetch — from
+`GET /api/services/app/EntityConfig/GetMainDataList` for the running backend, every time;
+never assume or copy a namespace from memory or examples. The same entity is
 registered under different namespaces across versions (`Person` is `Shesha.Domain.Person` on
 current builds, `Shesha.Core.Person` on older ones; some backends carry both) — a mismatch
-500/404s at runtime. Confirm the resolved string exposes
+500/404s at runtime. Confirm the resolved class exposes
 properties via `GET /api/services/app/Metadata/GetProperties?container=<resolved fullClassName>`
-BEFORE building. Never `object`, never an invented/guessed name. Entity class names diverge
+(the `container` param is the class-name string, not the object) BEFORE building. Never an
+invented/guessed name. Entity class names diverge
 from FK property names (`<fkProp>` can map to class `<FkPropDefinition>`) — when metadata
 404s, the EntityConfig `fullClassName` is the authority.
 Backend missing entirely? [full-stack-prereqs.md](full-stack-prereqs.md).
@@ -173,7 +177,7 @@ not screenshots, and clear the FE IndexedDB form cache from a static page (e.g.
 ## Checklist before push
 
 - [ ] display component matches the requested noun — "list"/cards ⇒ `datalist`, "table"/"grid" ⇒ `datatable`; never static stacked `container` cards for a list; multi-select list ⇒ `selectionMode: "multiple"`- [ ] every `propertyName` is camelCase (incl. datatable column `propertyName`s) — metadata `path` is PascalCase; PascalCase columns render blank cells
-- [ ] `modelType` = exact `fullClassName` resolved from `EntityConfig/GetMainDataList` for this backend (no assumed `Core`/`Domain` namespace, no `object`, no invented names)
+- [ ] `modelType` = the object `{ name, module }`, with `name`+`module` resolved from `EntityConfig/GetMainDataList` for this backend (no assumed `Core`/`Domain` namespace, no invented names; legacy string form tolerated but author the object)
 - [ ] every input has a non-empty camelCase `propertyName` that exists in metadata
 - [ ] required fields carry `validate.required: true`
 - [ ] every dropdown has `dataSourceType`; reflists have `referenceListId` `{module, name}`

@@ -15,7 +15,9 @@ After `JSON.parse(markup)`:
     { "id": "...", "type": "container", "components": [ ... ] }
   ],
   "formSettings": {
-    "modelType": "PBF.MembershipManagement.Domain.Domain.Member",
+    "modelType": { "name": "Member", "module": "PBF.MembershipManagement" },
+    "dataLoaderType": "gql",
+    "dataSubmitterType": "gql",
     "layout": "horizontal",
     "labelCol": { "span": 8 },
     "wrapperCol": { "span": 16 },
@@ -29,7 +31,20 @@ After `JSON.parse(markup)`:
 
 - Top-level `components` **MUST be an array**, not a plain object — the designer calls `e.components.forEach(...)`, so an object crashes it with `e.components.forEach is not a function`. When generating with a single root container, wrap it: `"components": [rootContainer]`.
 - `components` is a **nested tree** — containers, tabs, columns, cards have their own `components: []` (or in card's case, `content.components`). Walk recursively.
-- `formSettings.modelType` is the entity full name. Reference-list dropdowns and entity pickers silently fail to bind if this is wrong — keep it in sync with the actual entity binding.
+- `formSettings.modelType` binds the form to a type. **Favour the object shape `{ "name": "<ShortClass>", "module": "<Module>" }`** (the shape current Shesha builds emit, e.g. `{ "name": "Person", "module": "Shesha" }`). A bare full-class-name **string** (`"Shesha.Domain.Person"`) still renders and is accepted on legacy forms, but author new/edited forms with the object. Either way, resolve `name`+`module` (and the `fullClassName` you need for the metadata fetch) from `EntityConfig/GetMainDataList` — never assume a namespace. Reference-list dropdowns and entity pickers silently fail to bind if this is wrong — keep it in sync with the actual entity binding.
+  > The metadata fetch still needs the class-name **string**: `GET /api/services/app/Metadata/GetProperties?container=<fullClassName>`. The object goes into `modelType`; the resolved `fullClassName` string is what you pass as `container`.
+
+### Loader / submitter — favour the default endpoints
+
+`dataLoaderType` (how the form reads its bound entity) and `dataSubmitterType` (how it saves) decide whether the form talks to the entity's **default dynamic CRUD endpoints** or to a hand-wired custom URL. **When a form is bound to a type (`modelType` set), default to `"gql"` for both** — `"gql"` resolves to the entity's standard dynamic CRUD/GraphQL endpoints (`/api/dynamic/<module>/<Entity>/...`) automatically from `modelType`; you supply no URL.
+
+| Value | Meaning | Use when |
+|---|---|---|
+| `"gql"` | **Default.** Entity's dynamic CRUD/GraphQL endpoints, resolved from `modelType`. | Any entity-bound create / edit / detail form. **This is the default — do not override it.** |
+| `"none"` | No load / no save. | Card row templates, anonymous/action pages (login, OTP, search), forms that drive their own scripts. |
+| `"custom"` (custom URL loader/submitter) | A hand-specified REST endpoint instead of the entity default. | **Only when the user explicitly asks** for a specific endpoint, or a documented forced case. Then build/verify the endpoint via `shesha-developer:shesha-app-layer` first. |
+
+Do **not** wire a custom loader/submitter endpoint just because one exists — favour `"gql"` so the form stays in sync with the entity's CRUD API. A custom endpoint is opt-in, never the default.
 - `formSettings.layout`: `"horizontal"` (default — labels left of inputs) | `"vertical"` (labels above). Setting `"inline"` rarely produces what users expect; use a `container` with horizontal direction instead.
 - Empty form is `{ "components": [], "formSettings": { "modelType": "..." } }`. Don't push `null` or `""`.
 
