@@ -6,7 +6,7 @@ These contain template tokens `{{GEN_KEY}}` / `{{NEW_KEY}}` for some ids — rep
 
 ### When you copy a seed, swap ALL of these (easy to miss):
 
-1. `formSettings.modelType` → the target entity full class name.
+1. `formSettings.modelType` → the target entity as the object `{ name: "<ShortClass>", module: "<Module>" }` (favoured shape; a legacy seed may carry a full-class-name string — convert it). Resolve `name`+`module` from `EntityConfig/GetMainDataList`.
 2. Every `entityType` (string on `dataContext`; object `{name,module}` on `autocomplete`) → target entity.
 3. Each field's `propertyName`, `componentName`, `name`, `label` → the real entity property.
 4. The datatable `items` (columns) → the columns you want, with real `propertyName`s. **For the `entity-datalist.json` + `entity-card.json` pair: edit the row-template card form's fields to the card content you want (real `propertyName`s), point the datalist's `formId` at your card form, and set `selectionMode: "multiple"` if the prompt asked to select multiple.**
