@@ -21,6 +21,8 @@ multiple" in a *list* is `selectionMode: "multiple"` on the `datalist`, not a sw
 When the prompt names neither noun and the layout is ambiguous, the right component was chosen by
 **asking** the user, not guessing. See [components/data-tables.md](components/data-tables.md).
 
+**When building from a design or blueprint, the component matches what the design RENDERS — not the default for the data shape.** A blueprint `datalist panel` / a design that shows repeating **cards or chips** (rich item cards, count-badged related panels, chip rows) is a `datalist` row-template — a related collection rendered as a `datatable` is a **placement defect** even though a grid would also hold the rows. Reserve `datatable` for a genuine dense admin grid (sortable columns, "manage X"). Likewise a **read-only attribute rail** (label → value pairs in a detail summary) is read-only display controls, not editable inputs (see the `editMode` rule below) — and a status value is a `refListStatus` chip, not a dropdown.
+
 **Bind to a real entity — favouring the object shape.** Write `formSettings.modelType` as the
 object **`{ "name": "<ShortClass>", "module": "<Module>" }`** (e.g. `{ "name": "Person",
 "module": "Shesha" }`), the shape current Shesha builds emit; a bare full-class-name string
@@ -96,7 +98,21 @@ ones.
 
 **`editMode` matches the form type.** Inputs on detail forms governed by
 Start Edit/Submit/Cancel Edit use `inherited` (explicit `editable` makes fields editable
-before Edit is clicked). Full decision table: [components/edit-mode.md](components/edit-mode.md).
+before Edit is clicked). **But a read-only attribute rail that must ALWAYS show its values —
+a detail summary the user reads, not a section they edit inline — uses `editMode: "readOnly"`
+per control, NOT `"inherited"`.** `inherited` defers to form mode and renders **blank** in the
+default (non-edit) view state, so an entity/reflist field shows an empty cell until the form
+enters edit mode (the "rail labels with no values" defect); `readOnly` resolves and displays the
+`_displayName` immediately. Full decision table: [components/edit-mode.md](components/edit-mode.md).
+
+**No duplicate ids; no double-slot card children.** Every component `id` is unique across the
+WHOLE tree — the renderer keys components by id, so a collision renders one twice / drops the
+other. A `card` (and `collapsiblePanel`) holds its children in its **`content.components`** slot
+ONLY — never *also* in a top-level `components[]`. A container→card migration that left the old
+children in `components[]` while the slot is `content.components` makes the card render its body
+**twice** (often with identical ids → a collision too): the "everything shows 2–4×" defect. Before
+push, assert (a) ids are unique tree-wide, and (b) no `card`/`collapsiblePanel` has children in
+both `content.components` and `components[]` — if it does, keep `content.components`, empty the other.
 
 ---
 
@@ -178,6 +194,8 @@ not screenshots, and clear the FE IndexedDB form cache from a static page (e.g.
 
 - [ ] display component matches the requested noun — "list"/cards ⇒ `datalist`, "table"/"grid" ⇒ `datatable`; never static stacked `container` cards for a list; multi-select list ⇒ `selectionMode: "multiple"`- [ ] every `propertyName` is camelCase (incl. datatable column `propertyName`s) — metadata `path` is PascalCase; PascalCase columns render blank cells
 - [ ] `modelType` = the object `{ name, module }`, with `name`+`module` resolved from `EntityConfig/GetMainDataList` for this backend (no assumed `Core`/`Domain` namespace, no invented names; legacy string form tolerated but author the object)
+- [ ] component matches what the design/blueprint RENDERS — a `datalist panel` / card list builds a `datalist` row-template, never a `datatable`; a read-only rail uses `readOnly` controls + `refListStatus` chips
+- [ ] no duplicate component ids tree-wide; no `card`/`collapsiblePanel` with children in BOTH `content.components` and a top-level `components[]` (renders twice)
 - [ ] every input has a non-empty camelCase `propertyName` that exists in metadata
 - [ ] required fields carry `validate.required: true`
 - [ ] every dropdown has `dataSourceType`; reflists have `referenceListId` `{module, name}`

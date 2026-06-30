@@ -171,3 +171,19 @@ The `{ '==': [1, 0] }` fallback returns no rows — useful when the filter depen
 ## Row template (sub-form-renderer datalist)
 
 When `formSelectionMode: "name"` is set with a `formId: { module, name }`, the datalist renders each row using that form. The row data is exposed inside the row template's scripts as `data` (the row entity instance). Wrap the row template in its own form (e.g. `tier-card`, `tier-benefit-row`) and treat it as a regular entity-bound form.
+
+### Row-template data fetching — projection + nested binding (the "cards render empty" trap)
+
+A `datatable` auto-expands the nested properties **its columns name** (the column list drives the fetch projection). A `datalist` **row-template has no columns**, so it does NOT drive a projection — and an entity / `Url` `Crud/GetAll` returns FK & nested entities as **reference stubs** (`{ id, _displayName, _className }`) by default. So nested bindings in the card form (`otherRequirement.name`, `apiDefinition.status`) come back **empty even though the row count is right** — the row exists, the nested object is just a stub.
+
+- **`Url`-sourced context:** append an explicit projection to the endpoint URL — `'…/Crud/GetAll?filter=' + encodeURIComponent(...) + '&properties=' + encodeURIComponent('id,otherRequirement{id,name,requirement,status,type}')`. Build with **string concatenation, not template literals** (JSON-safety). The projection is a GraphQL-style selection naming every nested field the card binds.
+- **`Entity`-sourced context:** set the wrapper's `properties` to the same selection so the nested fields are fetched.
+- **Bind name-mode text by the nested PATH:** in the card form a `text` with `contentDisplay: "name"` reads **`data[propertyName]`**, so `propertyName` must be the full data path (`"otherRequirement.name"`), NOT a label — the `{{mustache}}` `content` is ignored for value resolution (it renders empty if `propertyName` is wrong). `refListStatus` chips bind the same nested-path way (`propertyName: "otherRequirement.status"`, `editMode: "readOnly"`).
+- **Lean rail panels:** a small count-badged related panel (a blueprint `datalist panel`) drops `datatable.quickSearch` + `datatable.pager` — keep only the Add affordance + the `datalist`. Full search/pager chrome in a narrow rail is the cramped-toolbar defect.
+
+### Full-width list rows vs a card grid — `orientation` + text overflow (runtime-verified)
+
+`orientation` is the lever, and it interacts with the card's text:
+- **`orientation: "wrap"`** = fixed-width cards in a wrapping **grid** (each ≈ a default card width ~300px; `listItemWidth: 1` does NOT make them full-width). Use for galleries/tiles. Here the fixed width gives the `nowrap`+ellipsis recipe a definite box to clamp against — and a too-tall card scrolls inside its fixed cell.
+- **`orientation: "vertical"`** = a stacked **list**, each row spanning the full container width — what "one card per row, full length of the box" needs. BUT vertical removes the width clamp, so **a `white-space: nowrap` field (the fixed-width ellipsis trick) forces the whole row to the text's full min-content width** (a giant horizontal blow-out). In a vertical list, long text must **wrap**, not nowrap.
+- **Truncate long bound text to a short string** instead of CSS line-clamp (which is fragile — the clamp box isn't the text node): `contentDisplay: "content"` + a code-mode `content` (`{_mode:"code",_code:"…return str.substring(0,180)+'…';"}`, evaluated with `data` in scope) → a short preview that wraps to ~1–2 lines, never blows out, never overlaps. Keep `dimensions.minHeight: "fit-content"` so the field's form-item grows to fit the wrapped lines instead of collapsing to ~0 and overlapping its neighbours.
