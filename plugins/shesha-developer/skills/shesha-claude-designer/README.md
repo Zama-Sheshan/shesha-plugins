@@ -52,13 +52,14 @@ The contract that wires the conductor to the sub-skills is [`references/handoff-
 Nothing about a brand is hard-coded into the recipes, blocks, or skills. **Brand lives entirely in one token file.**
 
 ### 1. The brand token file — the single source of brand truth
-`shesha-design-system/assets/themes/<brand>.tokens.json` (shipped example: `requirements-studio.tokens.json`). It holds, as data:
+`shesha-design-system/assets/themes/<brand>.tokens.json`. **The shipped default is `shesha.tokens.json`** — the framework's own Cobalt/Navy/Athens-Grey brand, used automatically whenever no app-specific brand is named. `requirements-studio.tokens.json` ships alongside it as an **example custom brand** (LandBank green). All brand files live in this one folder; a new brand is a new file dropped here (copy the default, swap values). Each holds, as data:
 
 - `palette` — `brand`, `accent`, `surfaces`, `lines`, `ink`, `semantic` colour groups
-- `type` — font `family`, a `scale` (micro 12 → titleLg 28), `weights`, `lineHeights`
+- `type` — font `family`, a `scale` (micro → title), `weights`, `lineHeights`
 - `spacing` (4px scale), `radius` (xs → pill), `shadow` (card/overlay/rowHover), `chrome` metrics
 - `statusLifecycle` — the status reflist + a per-status `badges` map (bg/fg/border) so status colour is data, not code
 - `roles` — a **semantic indirection map**: e.g. `"bodyText": "palette.ink.primary"`, `"cardBg": "palette.surfaces.surface"`, `"cardRadius": "radius.lg"`
+- `$antdTheme` *(default brand)* — the pre-resolved Ant Design 6.x `ConfigProvider` `{token, components}` object, applied verbatim at the app level (the "set once" theme layer)
 
 ### 2. Recipes & overlays reference **`$role:` tokens, never hexes**
 A block style-overlay says `"color": "$role:bodyText"`, not `"#1f1f1f"`. At stamp time the overlay's `$role:` tokens are resolved through the token file's `roles` map (via [`references/token-to-prop-mapping.md`](../shesha-design-system/references/token-to-prop-mapping.md)). So **the same blocks/overlays render any brand** — you only swap the token file.
@@ -75,7 +76,8 @@ A block style-overlay says `"color": "$role:bodyText"`, not `"#1f1f1f"`. At stam
 | You want to… | Edit | Notes |
 |---|---|---|
 | **Re-theme an existing app** (colour/type/spacing/radius/shadow) | the brand **token file** only | never edit recipes or blocks for a colour change |
-| **Add a new brand** | copy `assets/themes/requirements-studio.tokens.json` → `<brand>.tokens.json`, edit values, set it active | blocks/overlays/recipes are reused unchanged |
+| **Pick default vs custom brand** | nothing — `shesha` (`assets/themes/shesha.tokens.json`) is the automatic default; name a brand or hand over tokens to select a custom one | see `shesha-design-system/SKILL.md` Step 1 for the selection rule |
+| **Add a new brand** | copy the default `assets/themes/shesha.tokens.json` → `assets/themes/<brand>.tokens.json`, edit values (keep key names), set it active | blocks/overlays/recipes are reused unchanged |
 | **Add a new component block** | a skeleton in `shesha-form-edit/assets/blocks/<name>.block.json` **+** a paired overlay in `shesha-design-system/assets/block-styles/<name>.style.json` | list the matrix rows it relies on in the block's `$validatedAgainst`, then run `validate-blocks.js` |
 | **Add / change an appearance recipe** | `shesha-design-system/references/component-recipes.md` | keep it `$role:`-token-based, no hexes |
 | **Record a new empirical finding / re-measure after a Shesha upgrade** | `assets/capability-matrix.json` (+ `references/capability-matrix.md`) | re-run `validate-blocks.js`; a block referencing a `no-op` channel must fail |
@@ -109,7 +111,7 @@ shesha-form-edit/                  ── STRUCTURE ──
 
 shesha-design-system/              ── APPEARANCE ──
   SKILL.md
-  assets/themes/*.tokens.json .... the BRAND token file (palette/type/spacing/radius/shadow/status/roles)
+  assets/themes/*.tokens.json .... the BRAND token file — default `shesha`, example custom `requirements-studio` (palette/type/spacing/radius/shadow/status/roles/$antdTheme)
   assets/block-styles/*.style.json  per-block style overlays (use $role: tokens, paired to a block)
   assets/capability-matrix.json .. empirical "what renders" truth (+ references/capability-matrix.md)
   references/component-recipes.md  per-archetype v7 style recipes

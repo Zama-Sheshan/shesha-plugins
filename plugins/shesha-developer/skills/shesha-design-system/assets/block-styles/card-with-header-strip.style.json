@@ -1,6 +1,6 @@
 {
   "$overlay": "card-with-header-strip",
-  "_note": "Generic card surface = white container + hairline border + radius 12 + the card shadow. Header strip = surfaceAlt (#fafafa) bg with a bottom hairline only (borderType:'custom' bottom-side — per-side border renders; an 'all' border with a 0 radius would box the rounded card). Body = 16 padding. COLOUR IS OUT OF SCOPE: surfaces/hairlines/shadow are structural neutrals; the heading + count-badge TEXT colour is a $role:sectionHeading placeholder the live app theme resolves. font on a container is a no-op so the heading size/weight/colour live on the text child, not the strip.",
+  "_note": "Generic card surface = white container + hairline border + radius 8 + a whisper card shadow (Shesha default is border-forward). Header strip = surfaceAlt (#F8F8F9) bg with a bottom hairline only (borderType:'custom' bottom-side — per-side border renders; an 'all' border with a 0 radius would box the rounded card). Body = 16 padding. COLOUR IS OUT OF SCOPE: surfaces/hairlines/shadow are structural neutrals; the heading + count-badge TEXT colour is a $role:sectionHeading placeholder the live app theme resolves. font on a container is a no-op so the heading size/weight/colour live on the text child, not the strip.",
   "targets": {
     "cardWithHeaderStrip": {
       "desktop": {
@@ -17,10 +17,10 @@
           "radiusType": "all",
           "borderType": "all",
           "border": {
-            "all": { "width": "1px", "style": "solid", "color": "#e5e7eb" },
+            "all": { "width": "1px", "style": "solid", "color": "#E8EAF0" },
             "top": {}, "bottom": {}, "left": {}, "right": {}
           },
-          "radius": { "all": 12 }
+          "radius": { "all": 8 }
         },
         "shadow": { "offsetX": 0, "offsetY": 1, "blurRadius": 4, "spreadRadius": 0, "color": "rgba(0,0,0,0.06)" },
         "stylingBox": "{}"
@@ -37,7 +37,7 @@
         "flexWrap": "nowrap",
         "gap": "8",
         "dimensions": { "width": "100%", "minHeight": "fit-content" },
-        "background": { "type": "color", "color": "#fafafa" },
+        "background": { "type": "color", "color": "#F8F8F9" },
         "border": {
           "hideBorder": false,
           "radiusType": "all",
@@ -45,7 +45,7 @@
           "border": {
             "all": {},
             "top": {},
-            "bottom": { "width": "1px", "style": "solid", "color": "#f0f0f0" },
+            "bottom": { "width": "1px", "style": "solid", "color": "#F0F2F5" },
             "left": {}, "right": {}
           },
           "radius": { "all": 0 }

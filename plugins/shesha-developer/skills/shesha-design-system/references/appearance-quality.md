@@ -3,7 +3,7 @@
 The appearance companion to `shesha-form-edit`'s `form-quality.md`. **Clear split:** `form-quality.md` owns *construction* (bindings, CRUD wiring, `validationErrors`, the guardrails) — those are kept verbatim there and **appearance never overrides a construction guardrail**. This file owns *appearance*: when a form must look like a design or brand, grade it against the positive recipes below. Concrete v7 shapes are in [component-recipes.md](component-recipes.md); which channels actually render is in [capability-matrix.md](capability-matrix.md).
 
 ## Surface & elevation
-- Page root = `surfaces.canvas`; cards = white + hairline (`lines.border`) **+ the card shadow** (`shadow.card` = `0 1 4 rgba(0,0,0,0.06)`) + `radius.lg`; header strips = `surfaces.surfaceAlt` + bottom hairline. Borders AND a subtle shadow — not either/or.
+- Page root = `surfaces.canvas`; cards = white + hairline (`lines.border`) + `radius.lg` **plus the brand card shadow only if the brand defines one** (the Shesha default is border-forward — cards render flat; a brand with a visible `shadow.card` e.g. `0 1 4 rgba(0,0,0,0.06)` pairs it with the hairline); header strips = `surfaces.surfaceAlt` + bottom hairline. Structure comes from the line — never a shadow instead of a border, and never a heavy/decorative shadow.
 - Reserve `shadow.overlay` for floating surfaces only (modals, popovers, dropdown menus).
 - Build depth by **layering token surfaces** (canvas → surface → surfaceAlt → tint), not by stacking heavier shadows.
 
@@ -14,7 +14,7 @@ The appearance companion to `shesha-form-edit`'s `form-quality.md`. **Clear spli
 ## Splits, rhythm & shape
 - **Splits are flex `container` rows** sized via `desktop.dimensions.width` — never the `columns` component, never `customStyle:{flex}` (inert). Fixed rail = `332px`, filling main = `calc(100% - 348px)`. Every flex container sets `display:"flex"`.
 - 4px spacing grid (4/8/12/16/20/24/32/40/48); field gap 16; section gap 24; card padding 16 (compact) / 24 (default).
-- Radius by role: `radius.pill` status badges · `radius.md` (6) controls · `radius.lg` (12) cards · `radius.sm` (4) chips/legacy inputs.
+- Radius by role: `radius.pill` status badges · `radius.md` (6) controls · `radius.lg` (8 in the Shesha default; up to 12 in other brands) cards · `radius.sm` (4) chips/legacy inputs.
 
 ## Status & semantic colour
 - Status = a `refListStatus` chip coloured from `statusLifecycle.badges` (bg/fg/border) — **never colour alone**, always with the label.
