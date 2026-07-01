@@ -49,7 +49,7 @@ Which v7 style channel actually **renders** on which component, measured against
 | `text` `customStyle` (code-mode) | ✅ | `customStyle {_mode:'code',_code:'return {letterSpacing,textTransform,lineHeight,...}'}` — for `letter-spacing`/`text-transform`/`line-height` the `font` channel can't express (proven on the live status chip + KIB micro-labels) |
 | `progress` (v3) | ✅ | renders a bar; `strokeColor` applies (the completeness bar) |
 | `refListStatus` (v6) | ✅ | status pill; per-item bg/fg/border from the reflist; pill radius via `customStyle` inline-flex (proven in the live form) |
-| `button` / `buttonGroup` (v15) | ✅ via APP THEME | `buttonType` primary = app-theme primary fill (orange in this app), default = white+hairline. **Colour is app-theme-driven, not per-button** — don't override per button |
+| `button` / `buttonGroup` (v15) | ✅ via APP THEME | `buttonType` primary = app-theme primary fill (Cobalt `#003BB2` in the Shesha default), default = white+hairline. **Colour is app-theme-driven, not per-button** — don't override per button |
 | `alert` (v2) | ❌ custom style no-op | colour is driven by `alertType` (info/success/warning/error); a `desktop` bg/border block does NOT override it. Use the right `alertType`, or wrap/replace with a styled `container` for a custom callout |
 | `checkbox` (v5) | ✅ renders | (app-theme styled) |
 | `sectionSeparator` (v1) | ✅ renders | |
